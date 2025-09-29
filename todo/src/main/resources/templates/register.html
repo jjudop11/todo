@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Register</title>
+    <style> body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 24px; } input, button { padding: 8px; } .row { display:flex; gap:8px; } </style>
+    <script>
+        async function registerUser() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, email, name })
+            });
+            if (res.ok) {
+                alert('회원가입 완료. 로그인 해주세요.');
+                window.location.href = '/login';
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert('회원가입 실패: ' + (data.message || '에러'));
+            }
+        }
+    </script>
+</head>
+<body>
+<h1>회원가입</h1>
+<div class="row">
+    <input id="username" placeholder="아이디" />
+    <input id="password" type="password" placeholder="비밀번호" />
+    <input id="email" placeholder="이메일" />
+    <input id="name" placeholder="이름" />
+    <button onclick="registerUser()">가입</button>
+  </div>
+<a href="/login">로그인</a>
+</body>
+</html>
+
+

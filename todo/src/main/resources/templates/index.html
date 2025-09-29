@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Todo App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 24px; }
+        .row { display: flex; gap: 8px; margin-bottom: 8px; }
+        input, button { padding: 8px; }
+        ul { padding-left: 16px; }
+        li { margin: 4px 0; }
+    </style>
+    <script>
+        async function fetchTodos() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return;
+            const res = await fetch('/api/todos', { headers: { 'Authorization': 'Bearer ' + token }});
+            if (res.status === 401) return;
+            const data = await res.json();
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+            data.forEach(t => {
+                const li = document.createElement('li');
+                li.textContent = (t.completed ? '✅ ' : '⬜ ') + t.title;
+                list.appendChild(li);
+            });
+        }
+
+        async function addTodo() {
+            const title = document.getElementById('title').value;
+            const desc = document.getElementById('desc').value;
+            const token = localStorage.getItem('accessToken');
+            const res = await fetch('/api/todos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ title: title, description: desc })
+            });
+            if (res.ok) { document.getElementById('title').value=''; document.getElementById('desc').value=''; fetchTodos(); }
+        }
+
+        function onLoad() {
+            fetchTodos();
+        }
+        window.addEventListener('load', onLoad);
+    </script>
+    </head>
+<body>
+<h1>Todo</h1>
+<div class="row">
+    <input id="title" placeholder="할 일" />
+    <input id="desc" placeholder="설명 (선택)" />
+    <button onclick="addTodo()">추가</button>
+    <a href="/login">로그인</a>
+    <a href="/register">회원가입</a>
+  </div>
+<ul id="list"></ul>
+</body>
+</html>
+
+

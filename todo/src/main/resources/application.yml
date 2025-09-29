@@ -1,0 +1,54 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/todo?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    open-in-view: false
+  thymeleaf:
+    cache: false
+server:
+  port: ${PORT:8080}
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql: trace
+
+jwt:
+  # base64 인코딩된 비밀키 (운영에서는 환경변수로 주입 권장)
+  secret: ${JWT_SECRET:ZmFrZVNlY3JldEtleUZvclRlc3QxMjM0NTY3ODkw}
+
+spring:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/todo?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    open-in-view: false
+  thymeleaf:
+    cache: false
+server:
+  port: ${PORT:8080}
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql: trace
