@@ -11,6 +11,8 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -48,6 +50,17 @@ public class Todo {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(length = 20)
+    private String priority; // LOW, MEDIUM, HIGH 등 자유 텍스트
+
+    private LocalDateTime dueDate;
+
+    @ManyToMany
+    @JoinTable(name = "todo_tags",
+            joinColumns = @JoinColumn(name = "todo_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private Set<Tag> tags = new HashSet<>();
 
     @PrePersist
     void onCreate() {

@@ -4,6 +4,8 @@ import com.example.todo.domain.User;
 import com.example.todo.repository.UserRepository;
 import com.example.todo.security.JwtTokenProvider;
 import com.example.todo.security.RefreshTokenService;
+import com.example.todo.security.EmailTokenService;
+import com.example.todo.service.EmailService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
@@ -30,13 +32,17 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final EmailTokenService emailTokenService;
+    private final EmailService emailService;
 
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, RefreshTokenService refreshTokenService) {
+    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, RefreshTokenService refreshTokenService, EmailTokenService emailTokenService, EmailService emailService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
+        this.emailTokenService = emailTokenService;
+        this.emailService = emailService;
     }
 
     @PostMapping("/register")
@@ -60,6 +66,10 @@ public class AuthController {
                 .roles(Set.of("ROLE_USER"))
                 .build();
         userRepository.save(user);
+        // 이메일 인증 토큰 발송
+        String token = emailTokenService.generateAndStore("verify", user.getUsername(), java.time.Duration.ofHours(24));
+        String link = "http://localhost:8080/api/auth/verify?token=" + token;
+        emailService.send(user.getEmail(), "이메일 인증", "아래 링크를 클릭하여 이메일을 인증하세요: " + link);
         return ResponseEntity.ok(Map.of("message", "registered"));
     }
 
@@ -118,6 +128,54 @@ public class AuthController {
         private String username;
         @NotBlank
         private String password;
+    }
+    @GetMapping("/verify")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        var usernameOpt = emailTokenService.consume("verify", token);
+        if (usernameOpt.isEmpty()) return ResponseEntity.badRequest().body(Map.of("message", "invalid token"));
+        var user = userRepository.findByUsername(usernameOpt.get()).orElseThrow();
+        user = User.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .passwordHash(user.getPasswordHash())
+                .email(user.getEmail())
+                .name(user.getName())
+                .roles(user.getRoles())
+                .verified(true)
+                .build();
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "verified"));
+    }
+
+    @PostMapping("/password/reset-request")
+    public ResponseEntity<?> resetRequest(@RequestBody Map<String, String> body) {
+        String username = body.get("username");
+        var userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) return ResponseEntity.ok(Map.of("message", "ok"));
+        String token = emailTokenService.generateAndStore("reset", username, java.time.Duration.ofHours(1));
+        String link = "http://localhost:8080/reset?token=" + token;
+        emailService.send(userOpt.get().getEmail(), "비밀번호 재설정", "아래 링크에서 비밀번호를 재설정하세요: " + link);
+        return ResponseEntity.ok(Map.of("message", "ok"));
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<?> reset(@RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        String newPassword = body.get("password");
+        var usernameOpt = emailTokenService.consume("reset", token);
+        if (usernameOpt.isEmpty()) return ResponseEntity.badRequest().body(Map.of("message", "invalid token"));
+        var user = userRepository.findByUsername(usernameOpt.get()).orElseThrow();
+        user = User.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .passwordHash(passwordEncoder.encode(newPassword))
+                .email(user.getEmail())
+                .name(user.getName())
+                .roles(user.getRoles())
+                .verified(user.isVerified())
+                .build();
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "reset"));
     }
 
     @Data

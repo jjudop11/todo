@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>비밀번호 재설정</title>
+  <style> body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 24px; } input, button { padding: 8px; } .row { display:flex; gap:8px; } </style>
+  <script>
+    async function resetPassword() {
+      const url = new URL(window.location.href);
+      const token = url.searchParams.get('token');
+      const password = document.getElementById('password').value;
+      const res = await fetch('/api/auth/password/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password })
+      });
+      if (res.ok) { alert('변경되었습니다. 로그인해주세요.'); window.location.href = '/login'; }
+      else { alert('실패했습니다.'); }
+    }
+  </script>
+</head>
+<body>
+  <h1>비밀번호 재설정</h1>
+  <div class="row">
+    <input id="password" type="password" placeholder="새 비밀번호" />
+    <button onclick="resetPassword()">변경</button>
+  </div>
+</body>
+</html>
+
+

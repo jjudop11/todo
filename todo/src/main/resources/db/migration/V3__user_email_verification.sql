@@ -1,0 +1,4 @@
+ALTER TABLE users
+  ADD COLUMN verified BIT NOT NULL DEFAULT 0;
+
+

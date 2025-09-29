@@ -6,6 +6,8 @@ import com.example.todo.repository.UserRepository;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,9 +28,16 @@ public class TodoController {
     }
 
     @GetMapping
-    public ResponseEntity<?> list(Authentication authentication) {
+    public ResponseEntity<?> list(Authentication authentication,
+                                  @RequestParam(required = false) Boolean completed,
+                                  @RequestParam(required = false) String priority,
+                                  @RequestParam(required = false) String tag,
+                                  @RequestParam(defaultValue = "0") int page,
+                                  @RequestParam(defaultValue = "10") int size) {
         var user = userRepository.findByUsername(authentication.getName()).orElseThrow();
-        return ResponseEntity.ok(todoRepository.findByUserOrderByCreatedAtDesc(user));
+        Pageable pageable = PageRequest.of(page, size);
+        var result = todoRepository.search(user, completed, priority, tag, pageable);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping

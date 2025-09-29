@@ -53,6 +53,9 @@ public class User {
     @Column(name = "role", nullable = false, length = 50)
     @Builder.Default
     private Set<String> roles = new HashSet<>();
+
+    @Column(nullable = false)
+    private boolean verified;
 }
 
 
