@@ -9,6 +9,7 @@ import com.example.todo.service.EmailService;
 import com.example.todo.dto.auth.RegisterRequest;
 import com.example.todo.dto.auth.LoginRequest;
 import com.example.todo.dto.auth.RefreshRequest;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -89,10 +90,14 @@ public class AuthController {
 
         refreshTokenService.storeRefreshToken(request.getUsername(), refreshToken, Duration.ofHours(24));
 
-        return ResponseEntity.ok(Map.of(
-                "accessToken", accessToken,
-                "refreshToken", refreshToken
-        ));
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true).secure(false).sameSite("Lax").path("/").maxAge(Duration.ofHours(1)).build();
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true).secure(false).sameSite("Lax").path("/").maxAge(Duration.ofHours(24)).build();
+        return ResponseEntity.ok()
+                .header("Set-Cookie", accessCookie.toString())
+                .header("Set-Cookie", refreshCookie.toString())
+                .body(Map.of("message", "ok"));
     }
 
     @PostMapping("/refresh")
@@ -100,6 +105,8 @@ public class AuthController {
         var username = request.getUsername();
         var stored = refreshTokenService.getRefreshToken(username);
         if (stored.isEmpty() || !stored.get().equals(request.getRefreshToken())) {
+            // 재사용 탐지: 기존 토큰 제거
+            refreshTokenService.deleteRefreshToken(username);
             return ResponseEntity.status(401).body(Map.of("message", "invalid refresh token"));
         }
 
@@ -107,7 +114,18 @@ public class AuthController {
         userRepository.findByUsername(username).ifPresent(u -> claims.put("roles", u.getRoles()));
 
         String newAccessToken = jwtTokenProvider.createAccessToken(username, claims, 60 * 60);
-        return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(username, 60L * 60 * 24);
+        // 로테이션: 기존 토큰 교체
+        refreshTokenService.storeRefreshToken(username, newRefreshToken, Duration.ofHours(24));
+
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", newAccessToken)
+                .httpOnly(true).secure(false).sameSite("Lax").path("/").maxAge(Duration.ofHours(1)).build();
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
+                .httpOnly(true).secure(false).sameSite("Lax").path("/").maxAge(Duration.ofHours(24)).build();
+        return ResponseEntity.ok()
+                .header("Set-Cookie", accessCookie.toString())
+                .header("Set-Cookie", refreshCookie.toString())
+                .body(Map.of("message", "rotated"));
     }
 
     

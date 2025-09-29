@@ -20,6 +20,17 @@ spring:
     locations: classpath:db/migration
 server:
   port: ${PORT:8080}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: todo
 logging:
   level:
     org.hibernate.SQL: debug
@@ -67,6 +78,11 @@ spring:
     enabled: true
 server:
   port: ${PORT:8080}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
 
 spring:
   datasource:

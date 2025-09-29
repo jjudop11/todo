@@ -34,6 +34,7 @@ public class TodoController {
                                   @RequestParam(required = false) String tag,
                                   @RequestParam(defaultValue = "0") int page,
                                   @RequestParam(defaultValue = "10") int size) {
+        if (size > 50) size = 50;
         var user = userRepository.findByUsername(authentication.getName()).orElseThrow();
         Pageable pageable = PageRequest.of(page, size);
         var result = todoRepository.search(user, completed, priority, tag, pageable);
