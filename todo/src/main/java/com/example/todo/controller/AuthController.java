@@ -6,8 +6,9 @@ import com.example.todo.security.JwtTokenProvider;
 import com.example.todo.security.RefreshTokenService;
 import com.example.todo.security.EmailTokenService;
 import com.example.todo.service.EmailService;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import com.example.todo.dto.auth.RegisterRequest;
+import com.example.todo.dto.auth.LoginRequest;
+import com.example.todo.dto.auth.RefreshRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -109,26 +110,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
     }
 
-    @Data
-    public static class RegisterRequest {
-        @NotBlank
-        private String username;
-        @NotBlank
-        private String password;
-        @NotBlank
-        private String name;
-        @NotBlank
-        @jakarta.validation.constraints.Email
-        private String email;
-    }
-
-    @Data
-    public static class LoginRequest {
-        @NotBlank
-        private String username;
-        @NotBlank
-        private String password;
-    }
+    
     @GetMapping("/verify")
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         var usernameOpt = emailTokenService.consume("verify", token);
@@ -178,13 +160,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "reset"));
     }
 
-    @Data
-    public static class RefreshRequest {
-        @NotBlank
-        private String username;
-        @NotBlank
-        private String refreshToken;
-    }
+    
 }
 
 

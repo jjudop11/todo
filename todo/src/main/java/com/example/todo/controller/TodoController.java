@@ -3,8 +3,8 @@ package com.example.todo.controller;
 import com.example.todo.domain.Todo;
 import com.example.todo.repository.TodoRepository;
 import com.example.todo.repository.UserRepository;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import com.example.todo.dto.todo.CreateTodo;
+import com.example.todo.dto.todo.UpdateTodo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -78,19 +78,7 @@ public class TodoController {
         return ResponseEntity.ok().build();
     }
 
-    @Data
-    public static class CreateTodo {
-        @NotBlank
-        private String title;
-        private String description;
-    }
-
-    @Data
-    public static class UpdateTodo {
-        private String title;
-        private String description;
-        private Boolean completed;
-    }
+    
 }
 
 

@@ -24,6 +24,16 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql: trace
+  oauth2:
+    client:
+      registration:
+        google:
+          client-id: ${GOOGLE_CLIENT_ID:}
+          client-secret: ${GOOGLE_CLIENT_SECRET:}
+          scope: openid,profile,email
+      provider:
+        google:
+          issuer-uri: https://accounts.google.com
 
 jwt:
   # base64 인코딩된 비밀키 (운영에서는 환경변수로 주입 권장)
